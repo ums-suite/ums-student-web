@@ -4,7 +4,7 @@ The student portal — registration, routine, grades/transcript, fees, hostel, l
 
 - **Full spec:** [`ums-platform/docs/client/ums-student-web/requirement-spec.md`](https://github.com/ums-suite/ums-platform/blob/main/docs/client/ums-student-web/requirement-spec.md)
 - **Design system:** [`ums-design-system`](https://github.com/ums-suite/ums-design-system) · **API contracts:** [`ums-shared`](https://github.com/ums-suite/ums-shared)
-- **Tech:** Angular (latest LTS), PWA-installable, Bengali/English i18n
+- **Tech:** Angular 22, PWA-installable, Bengali/English i18n
 
 ## Status
 
