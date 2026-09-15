@@ -147,6 +147,33 @@ export const EN_TRANSLATIONS: TranslationDictionary = {
   'routine.detail.room': 'Room',
   'routine.detail.roomUnavailable': 'Not available yet -- use the room directory below.',
 
+  'results.title': 'Grades & Transcript',
+  'results.error': 'We could not load your grades. Please try again.',
+  'results.empty': 'No published results yet -- check back once a result is published.',
+  'results.cgpa.title': 'Official CGPA',
+  'results.cgpa.empty': 'Not yet available',
+  'results.gpaTrend.title': 'GPA trend',
+  'results.gpaTrend.seriesLabel': 'Semester average (unofficial)',
+  'results.gpaTrend.unofficialNote':
+    'Unofficial preview only -- no per-semester GPA is computed by Academic yet. Your official CGPA is shown above.',
+  'results.semester.averageScore': 'Average {{score}} (unofficial)',
+  'results.table.course': 'Course',
+  'results.table.credits': 'Credits',
+  'results.table.grade': 'Grade',
+  'results.table.score': 'Score',
+  'results.transcript.title': 'Official Transcript',
+  'results.transcript.note':
+    'Requesting a PDF submits a Transcript Request for review; the download becomes available once it is approved and generated.',
+  'results.transcript.requestPdf': 'Request transcript PDF',
+  'results.transcript.localeNote':
+    'Your language choice is recorded with the request, but the generated PDF currently always renders in the default template regardless of this choice (a known backend limitation).',
+  'results.transcript.download': 'Download PDF',
+  'results.transcript.status.Submitted': 'Request submitted',
+  'results.transcript.status.UnderReview': 'Under review',
+  'results.transcript.status.Approved': 'Approved -- generating document',
+  'results.transcript.status.Rejected': 'Request rejected',
+  'results.transcript.status.Fulfilled': 'Ready',
+
   'common.retry': 'Retry',
   'common.cancel': 'Cancel',
   'common.close': 'Close',
