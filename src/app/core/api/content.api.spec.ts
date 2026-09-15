@@ -23,8 +23,10 @@ describe('ContentApi', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('lists the authenticated Student notice feed with skip/take', () => {
-    api.listNoticesFeed('Student', 10, 5).subscribe();
+  it('lists the authenticated Student notice feed with skip/take', async () => {
+    const result$ = new Promise((resolve) =>
+      api.listNoticesFeed('Student', 10, 5).subscribe(resolve),
+    );
     const req = httpMock.expectOne(
       (r) =>
         r.url === `${baseUrl}/api/v1/content/notices/feed` &&
@@ -32,15 +34,17 @@ describe('ContentApi', () => {
         r.params.get('skip') === '10' &&
         r.params.get('take') === '5',
     );
-    req.flush([]);
+    req.flush([{ id: 'notice-1' }]);
+    expect(await result$).toEqual([jasmine.objectContaining({ id: 'notice-1' })]);
   });
 
-  it('defaults skip/take when not given', () => {
-    api.listNoticesFeed('Student').subscribe();
+  it('defaults skip/take when not given', async () => {
+    const result$ = new Promise((resolve) => api.listNoticesFeed('Student').subscribe(resolve));
     const req = httpMock.expectOne(
       (r) => r.params.get('skip') === '0' && r.params.get('take') === '20',
     );
     req.flush([]);
+    expect(await result$).toEqual([]);
   });
 
   it('gets a single notice by id', async () => {

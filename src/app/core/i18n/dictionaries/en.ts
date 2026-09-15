@@ -126,6 +126,27 @@ export const EN_TRANSLATIONS: TranslationDictionary = {
   'registration.waitlist.offer.expired': 'Your offer window closed. You remain on the waitlist.',
   'registration.waitlist.notAvailable': 'Waitlist is not available for this offering yet.',
 
+  'routine.title': 'Routine',
+  'routine.subtitle': 'Your weekly class schedule for {{semester}}.',
+  'routine.sessionId.label': 'Academic session id',
+  'routine.error': 'We could not load your routine. Please try again.',
+  'routine.empty': 'No classes on your routine yet.',
+  'routine.exams.title': 'Exams',
+  'routine.exams.noDateNote':
+    'Exam dates are not yet available from Academic -- shown here without a scheduled date.',
+  'routine.exams.assessmentCount': '{{count}} assessment(s)',
+  'routine.roomDirectory.title': 'Where is this room?',
+  'routine.roomDirectory.note':
+    'Class sections do not yet carry a room reference -- browse the campus room directory instead.',
+  'routine.roomDirectory.browse': 'Browse buildings',
+  'routine.roomDirectory.empty': 'No rooms found in this building.',
+  'routine.roomDirectory.capacity': 'Capacity: {{count}}',
+  'routine.detail.day': 'Day',
+  'routine.detail.time': 'Time',
+  'routine.detail.credits': 'Credit hours',
+  'routine.detail.room': 'Room',
+  'routine.detail.roomUnavailable': 'Not available yet -- use the room directory below.',
+
   'common.retry': 'Retry',
   'common.cancel': 'Cancel',
   'common.close': 'Close',

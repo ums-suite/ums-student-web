@@ -44,7 +44,11 @@ export const routes: Routes = [
             (m) => m.RegistrationComponent,
           ),
       },
-      { path: 'routine', loadComponent: placeholder, data: { label: 'Routine' } },
+      {
+        path: 'routine',
+        loadComponent: () =>
+          import('./features/routine/routine.component').then((m) => m.RoutineComponent),
+      },
       { path: 'grades', loadComponent: placeholder, data: { label: 'Grades' } },
       { path: 'fees', loadComponent: placeholder, data: { label: 'Fees' } },
       { path: 'hostel', loadComponent: placeholder, data: { label: 'Hostel' } },

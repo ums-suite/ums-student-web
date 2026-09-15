@@ -23,15 +23,16 @@ describe('NotificationsApi', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('lists my notifications with skip/take', () => {
-    api.listMyNotifications(0, 20).subscribe();
+  it('lists my notifications with skip/take', async () => {
+    const result$ = new Promise((resolve) => api.listMyNotifications(0, 20).subscribe(resolve));
     const req = httpMock.expectOne(
       (r) =>
         r.url === `${baseUrl}/api/v1/notifications/me/` &&
         r.params.get('skip') === '0' &&
         r.params.get('take') === '20',
     );
-    req.flush([]);
+    req.flush([{ id: 'n1' }]);
+    expect(await result$).toEqual([jasmine.objectContaining({ id: 'n1' })]);
   });
 
   it('gets the unread count, unwrapped to a plain number', async () => {

@@ -23,15 +23,18 @@ describe('DocumentsApi', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('lists my documents scoped to ownerId, optionally filtered by type', () => {
-    api.listMyDocuments('student-1', 'Transcript').subscribe();
+  it('lists my documents scoped to ownerId, optionally filtered by type', async () => {
+    const result$ = new Promise((resolve) =>
+      api.listMyDocuments('student-1', 'Transcript').subscribe(resolve),
+    );
     const req = httpMock.expectOne(
       (r) =>
         r.url === `${baseUrl}/api/v1/documents` &&
         r.params.get('ownerId') === 'student-1' &&
         r.params.get('type') === 'Transcript',
     );
-    req.flush([]);
+    req.flush([{ id: 'doc-1' }]);
+    expect(await result$).toEqual([jasmine.objectContaining({ id: 'doc-1' })]);
   });
 
   it('omits the type param when not given', () => {

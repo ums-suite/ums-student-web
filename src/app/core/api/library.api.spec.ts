@@ -23,8 +23,10 @@ describe('LibraryApi', () => {
 
   afterEach(() => httpMock.verify());
 
-  it('searches books with the confirmed filter params, defaulting page/pageSize', () => {
-    api.searchBooks({ q: 'algorithms' }).subscribe();
+  it('searches books with the confirmed filter params, defaulting page/pageSize', async () => {
+    const result$ = new Promise((resolve) =>
+      api.searchBooks({ q: 'algorithms' }).subscribe(resolve),
+    );
     const req = httpMock.expectOne(
       (r) =>
         r.url === `${baseUrl}/api/v1/library/books/` &&
@@ -33,6 +35,7 @@ describe('LibraryApi', () => {
         r.params.get('pageSize') === '20',
     );
     req.flush({ items: [], totalCount: 0, page: 1, pageSize: 20 });
+    expect(await result$).toEqual(jasmine.objectContaining({ totalCount: 0 }));
   });
 
   it('gets a book by id', async () => {
