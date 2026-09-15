@@ -29,4 +29,26 @@ describe('StudentApi', () => {
     expect(req.request.method).toBe('GET');
     req.flush({});
   });
+
+  it('submits a StudentRequest', async () => {
+    const body = {
+      requestType: 'IdReissue' as const,
+      reason: 'Lost my card',
+      purpose: null,
+      description: null,
+      isAgainstOwnDepartmentHead: false,
+    };
+    const result$ = new Promise((resolve) => api.submitStudentRequest(body).subscribe(resolve));
+    const req = httpMock.expectOne(`${baseUrl}/api/v1/student/students/requests/`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(body);
+    req.flush({ id: 'req-1', status: 'Submitted' });
+    expect(await result$).toEqual(jasmine.objectContaining({ status: 'Submitted' }));
+  });
+
+  it('gets a StudentRequest by id', async () => {
+    const result$ = new Promise((resolve) => api.getStudentRequest('req-1').subscribe(resolve));
+    httpMock.expectOne(`${baseUrl}/api/v1/student/students/requests/req-1`).flush({ id: 'req-1' });
+    expect(await result$).toEqual(jasmine.objectContaining({ id: 'req-1' }));
+  });
 });

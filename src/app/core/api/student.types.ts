@@ -34,3 +34,47 @@ export interface StudentDto {
   /** Optimistic-concurrency token -- must be sent back unchanged on a self-service profile update. */
   readonly version: number;
 }
+
+/**
+ * `StudentRequest` (SWEB-28), verified against
+ * `UMS.Modules.Student.Application/StudentRequests/*` and
+ * `UMS.Modules.Student.Api/Endpoints/StudentRequestEndpoints.cs`.
+ *
+ * `POST /api/v1/student/students/requests/` is a single discriminated-body endpoint: exactly one
+ * of `reason`/`purpose`/`description` is meaningful, selected by `requestType`
+ * (`IdReissue` -> `reason`, `TranscriptRequest` -> `purpose`, `Grievance` -> `description` +
+ * `isAgainstOwnDepartmentHead`) -- never send more than the one field the type calls for.
+ */
+export type StudentRequestType = 'IdReissue' | 'TranscriptRequest' | 'Grievance';
+
+export type StudentRequestStatus =
+  'Submitted' | 'UnderReview' | 'Approved' | 'Rejected' | 'Fulfilled';
+
+export interface SubmitStudentRequestRequest {
+  readonly requestType: StudentRequestType;
+  readonly reason: string | null;
+  readonly purpose: string | null;
+  readonly description: string | null;
+  readonly isAgainstOwnDepartmentHead: boolean;
+}
+
+/**
+ * On approval of a `TranscriptRequest`, `generatedDocumentId` gets populated once Documents
+ * finishes generating the PDF server-side -- fetch it via `DocumentsApi.getDocument`.
+ */
+export interface StudentRequestDto {
+  readonly id: string;
+  readonly studentId: string;
+  readonly requestType: StudentRequestType;
+  readonly details: string;
+  readonly status: StudentRequestStatus;
+  readonly reviewScopeNodeId: string | null;
+  readonly isAgainstOwnDepartmentHead: boolean;
+  readonly generatedDocumentId: string | null;
+  readonly decidedByUserId: string | null;
+  readonly decisionReason: string | null;
+  readonly submittedAt: string;
+  readonly decidedAt: string | null;
+  readonly fulfilledAt: string | null;
+  readonly version: number;
+}
