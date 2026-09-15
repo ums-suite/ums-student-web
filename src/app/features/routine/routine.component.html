@@ -1,0 +1,157 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+@if (!store.session()) {
+  <section class="routine__session-picker">
+    <h1>{{ 'routine.title' | translate }}</h1>
+    <ums-form-field
+      #sessionField="umsFormField"
+      [label]="'routine.sessionId.label' | translate"
+      [required]="true"
+    >
+      <ums-input
+        [id]="sessionField.controlId()"
+        [value]="sessionIdInput()"
+        (valueChange)="sessionIdInput.set($event)"
+      />
+    </ums-form-field>
+    <ums-button variant="primary" (click)="loadSession()">{{
+      'common.save' | translate
+    }}</ums-button>
+
+    @if (store.error()) {
+      <ums-error-state
+        [title]="'routine.error' | translate"
+        [retryLabel]="'common.retry' | translate"
+        (retry)="retry()"
+      />
+    }
+  </section>
+} @else {
+  <section class="routine">
+    <header class="routine__header">
+      <h1>{{ 'routine.title' | translate }}</h1>
+      <p>{{ 'routine.subtitle' | translate: { semester: store.semester()?.name ?? '' } }}</p>
+
+      @if (!connectivity.isOnline()) {
+        <p class="routine__stale-note">
+          {{ 'dashboard.offline.lastUpdated' | translate: { time: lastUpdatedLabel() } }}
+        </p>
+      }
+    </header>
+
+    @if (store.loading()) {
+      <ums-skeleton variant="rect" height="24rem" />
+    } @else if (store.error()) {
+      <ums-error-state
+        [title]="'routine.error' | translate"
+        [retryLabel]="'common.retry' | translate"
+        (retry)="retry()"
+      />
+    } @else if (store.blocks().length === 0) {
+      <ums-empty-state [title]="'routine.empty' | translate" />
+    } @else {
+      <div class="routine__grid" [style.--routine-rows]="timeLabels.length">
+        <div class="routine__corner"></div>
+        @for (day of dayLabels; track $index) {
+          <div class="routine__day-header" [style.grid-column]="$index + 2">
+            {{ dayLabel($index) }}
+          </div>
+        }
+
+        @for (label of timeLabels; track label; let rowIndex = $index) {
+          <div class="routine__time-label" [style.grid-row]="rowIndex + 2">{{ label }}</div>
+        }
+
+        @for (block of store.blocks(); track block.enrollmentId + block.sectionId) {
+          <button
+            type="button"
+            class="routine__block"
+            [class]="colorClassFor(block)"
+            [style.grid-row]="
+              placementFor(block).rowStart + 1 + ' / span ' + placementFor(block).rowSpan
+            "
+            [style.grid-column]="placementFor(block).dayColumn + 1"
+            (click)="expand(block)"
+          >
+            <span class="routine__block-code">{{ block.courseCode }}</span>
+            <span class="routine__block-time">{{ block.start }}–{{ block.end }}</span>
+          </button>
+        }
+      </div>
+    }
+
+    @if (store.examGroups().length > 0) {
+      <section class="routine__exams" aria-label="Exams">
+        <h2>{{ 'routine.exams.title' | translate }}</h2>
+        <p class="routine__exams-note">{{ 'routine.exams.noDateNote' | translate }}</p>
+        <ul>
+          @for (group of store.examGroups(); track group.examId) {
+            <li>
+              <span>{{ group.courseCode }} — {{ group.examName }}</span>
+              <ums-badge variant="info" size="sm">
+                {{
+                  'routine.exams.assessmentCount' | translate: { count: group.assessments.length }
+                }}
+              </ums-badge>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    <section class="routine__room-directory">
+      <h2>{{ 'routine.roomDirectory.title' | translate }}</h2>
+      <p>{{ 'routine.roomDirectory.note' | translate }}</p>
+
+      @if (store.buildings().length === 0) {
+        <ums-button variant="secondary" (click)="loadRoomDirectory()">
+          {{ 'routine.roomDirectory.browse' | translate }}
+        </ums-button>
+      } @else {
+        <ums-select
+          [options]="buildingOptions()"
+          [value]="selectedBuildingId()"
+          (valueChange)="onBuildingSelected($event)"
+        />
+
+        @if (store.roomDirectoryLoading()) {
+          <ums-skeleton variant="rect" height="4rem" />
+        } @else if (selectedBuildingId() && store.rooms().length === 0) {
+          <ums-empty-state [title]="'routine.roomDirectory.empty' | translate" />
+        } @else {
+          <ul class="routine__room-list">
+            @for (room of store.rooms(); track room.id) {
+              <li>
+                <span>{{ room.name }}</span>
+                @if (room.capacity !== null) {
+                  <span>{{
+                    'routine.roomDirectory.capacity' | translate: { count: room.capacity }
+                  }}</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      }
+    </section>
+  </section>
+}
+
+<ums-modal
+  [open]="selectedBlock() !== null"
+  [title]="selectedBlock()?.courseTitle ?? ''"
+  (closed)="closeExpanded()"
+>
+  @if (selectedBlock(); as block) {
+    <dl class="routine__block-detail">
+      <dt>{{ 'routine.detail.day' | translate }}</dt>
+      <dd>{{ dayLabel(block.dayOfWeek) }}</dd>
+      <dt>{{ 'routine.detail.time' | translate }}</dt>
+      <dd>{{ block.start }}–{{ block.end }}</dd>
+      <dt>{{ 'routine.detail.credits' | translate }}</dt>
+      <dd>{{ block.creditHours }}</dd>
+      <dt>{{ 'routine.detail.room' | translate }}</dt>
+      <dd>{{ 'routine.detail.roomUnavailable' | translate }}</dd>
+    </dl>
+  }
+</ums-modal>

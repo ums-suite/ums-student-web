@@ -105,9 +105,7 @@ describe('DashboardStore', () => {
           paidAt: null,
         },
       ]);
-    httpMock
-      .expectOne(`${baseUrl}/api/v1/hostel/allocations/me`)
-      .flush({}, { status: 404, statusText: 'Not Found' });
+    httpMock.expectOne(`${baseUrl}/api/v1/hostel/allocations/me`).flush([]);
     httpMock.expectOne(`${baseUrl}/api/v1/academic/students/student-1/transcript`).flush({
       studentId: 'student-1',
       results: [],
@@ -141,9 +139,7 @@ describe('DashboardStore', () => {
       .expectOne(`${baseUrl}/api/v1/academic/programs/program-1`)
       .flush({ title: 'Not found' }, { status: 404, statusText: 'Not Found' });
     httpMock.expectOne((r) => r.url === `${baseUrl}/api/v1/finance/invoices`).flush([]);
-    httpMock
-      .expectOne(`${baseUrl}/api/v1/hostel/allocations/me`)
-      .flush({}, { status: 404, statusText: 'Not Found' });
+    httpMock.expectOne(`${baseUrl}/api/v1/hostel/allocations/me`).flush([]);
     httpMock.expectOne(`${baseUrl}/api/v1/academic/students/student-1/transcript`).flush({
       studentId: 'student-1',
       results: [],

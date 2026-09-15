@@ -85,6 +85,11 @@ export class AppShellComponent {
         icon: 'clipboard-text',
         path: '/requests',
       },
+      {
+        label: this.translation.t('shell.nav.notifications'),
+        icon: 'bell',
+        path: '/notifications',
+      },
     ];
 
     return items.map((item) => ({ ...item, href: item.path, active: url.startsWith(item.path) }));

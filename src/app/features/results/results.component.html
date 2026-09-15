@@ -1,0 +1,119 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+<section class="results">
+  <header class="results__header">
+    <h1>{{ 'results.title' | translate }}</h1>
+
+    @if (!connectivity.isOnline()) {
+      <p class="results__stale-note">
+        {{ 'dashboard.offline.lastUpdated' | translate: { time: lastUpdatedLabel() } }}
+      </p>
+    }
+  </header>
+
+  @if (store.loading() && !store.fetchedAt()) {
+    <ums-skeleton variant="rect" height="20rem" />
+  } @else if (store.error()) {
+    <ums-error-state
+      [title]="'results.error' | translate"
+      [retryLabel]="'common.retry' | translate"
+      (retry)="retry()"
+    />
+  } @else {
+    <ums-card
+      variant="stat"
+      [statLabel]="'results.cgpa.title' | translate"
+      [statValue]="
+        store.overallAverageScore() !== null
+          ? store.overallAverageScore()!.toFixed(2)
+          : ('results.cgpa.empty' | translate)
+      "
+    />
+
+    @if (!store.hasAnyPublishedResults()) {
+      <ums-empty-state [title]="'results.empty' | translate" />
+    } @else {
+      <section class="results__trend" aria-label="GPA trend">
+        <h2>{{ 'results.gpaTrend.title' | translate }}</h2>
+        <p class="results__unofficial-note">{{ 'results.gpaTrend.unofficialNote' | translate }}</p>
+        <ums-line-chart [categories]="trendCategories()" [series]="trendSeries()" [smooth]="true" />
+      </section>
+
+      <section class="results__semesters" aria-label="Grades by semester">
+        @for (group of store.semesterGroups(); track group.semesterId) {
+          <details class="results__semester" open>
+            <summary>
+              <span>{{ group.ordinalLabel }}</span>
+              <span class="results__semester-avg">
+                {{
+                  'results.semester.averageScore'
+                    | translate: { score: group.averageScore.toFixed(1) }
+                }}
+              </span>
+            </summary>
+
+            <table class="results__grade-table">
+              <thead>
+                <tr>
+                  <th>{{ 'results.table.course' | translate }}</th>
+                  <th>{{ 'results.table.credits' | translate }}</th>
+                  <th>{{ 'results.table.grade' | translate }}</th>
+                  <th>{{ 'results.table.score' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of group.courses; track row.enrollmentId) {
+                  <tr>
+                    <td>{{ courseLabel(row.courseId) }}</td>
+                    <td class="ums-tnum">{{ row.creditHours }}</td>
+                    <td>{{ row.letterGrade }}</td>
+                    <td class="ums-tnum">{{ row.calculatedScore.toFixed(1) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </details>
+        }
+      </section>
+
+      <section class="results__transcript" aria-label="Official transcript">
+        <h2>{{ 'results.transcript.title' | translate }}</h2>
+        <p>{{ 'results.transcript.note' | translate }}</p>
+
+        <div class="results__pdf-controls">
+          <ums-select
+            [options]="localeOptions"
+            [value]="pdfLocale()"
+            (valueChange)="onPdfLocaleChange($event)"
+          />
+          <ums-button
+            variant="primary"
+            [disabled]="!canRequestPdf() || store.transcriptPdfSubmitting()"
+            (click)="requestTranscriptPdf()"
+          >
+            {{ 'results.transcript.requestPdf' | translate }}
+          </ums-button>
+        </div>
+        <p class="results__pdf-locale-note">{{ 'results.transcript.localeNote' | translate }}</p>
+
+        @if (store.transcriptPdfStatus(); as status) {
+          <div class="results__pdf-status">
+            <ums-badge [variant]="downloadReady() ? 'success' : 'info'" size="sm">
+              {{ 'results.transcript.status.' + status | translate }}
+            </ums-badge>
+
+            @if (downloadReady() && store.transcriptPdfDocument()?.downloadUrl; as url) {
+              <a [href]="url" target="_blank" rel="noopener">
+                {{ 'results.transcript.download' | translate }}
+              </a>
+            } @else {
+              <ums-button variant="tertiary" size="sm" (click)="refreshPdfStatus()">
+                {{ 'common.retry' | translate }}
+              </ums-button>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+</section>

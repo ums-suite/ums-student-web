@@ -19,6 +19,11 @@ import { ConnectivityService } from '../../core/pwa/connectivity.service';
 import { shortPoll } from '../../core/realtime/short-poll';
 import { TranslationService } from '../../core/i18n/translation.service';
 import {
+  readTrackedEnrollmentIds,
+  writeTrackedEnrollmentIds,
+} from '../../core/state/enrollment-tracking.util';
+import { selectActiveSemester } from '../../core/state/semester-selection.util';
+import {
   buildEligibility,
   classifyEnrollmentError,
   computeRegistrationWindowStatus,
@@ -33,8 +38,6 @@ import type {
 } from './registration.types';
 import { WaitlistApi } from './waitlist.api';
 import type { WaitlistPositionResponse } from './registration.types';
-
-const STORAGE_PREFIX = 'ums-student-web:registration:enrollments:';
 
 /**
  * Registration store (SWEB-11 through SWEB-15) -- the highest-scrutiny feature area in this
@@ -421,7 +424,7 @@ export class RegistrationStore {
   }
 
   private loadTrackedEnrollments(studentId: string, semesterId: string): void {
-    const ids = this.readStoredEnrollmentIds(studentId, semesterId);
+    const ids = readTrackedEnrollmentIds(studentId, semesterId);
     if (ids.length === 0) {
       this.trackedEnrollmentsState.set([]);
       return;
@@ -479,48 +482,10 @@ export class RegistrationStore {
     const studentId = this.studentIdState();
     const semesterId = this.semesterState()?.id;
     if (studentId && semesterId) {
-      this.writeStoredEnrollmentIds(studentId, semesterId, [
-        ...this.readStoredEnrollmentIds(studentId, semesterId),
+      writeTrackedEnrollmentIds(studentId, semesterId, [
+        ...readTrackedEnrollmentIds(studentId, semesterId),
         enrollment.id,
       ]);
     }
   }
-
-  private storageKey(studentId: string, semesterId: string): string {
-    return `${STORAGE_PREFIX}${studentId}:${semesterId}`;
-  }
-
-  private readStoredEnrollmentIds(studentId: string, semesterId: string): readonly string[] {
-    try {
-      const raw = localStorage.getItem(this.storageKey(studentId, semesterId));
-      return raw ? (JSON.parse(raw) as string[]) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private writeStoredEnrollmentIds(
-    studentId: string,
-    semesterId: string,
-    ids: readonly string[],
-  ): void {
-    try {
-      localStorage.setItem(this.storageKey(studentId, semesterId), JSON.stringify(ids));
-    } catch {
-      // Best-effort only -- a private-browsing/storage-disabled session simply loses same-browser
-      // enrollment tracking, never breaks registration itself.
-    }
-  }
-}
-
-/** No "current semester" flag exists (confirmed gap) -- prefers whichever semester's registration window is open right now, falling back to the most recently-starting one. */
-function selectActiveSemester(semesters: readonly SemesterDto[], now: Date): SemesterDto | null {
-  if (semesters.length === 0) {
-    return null;
-  }
-  const open = semesters.find((s) => computeRegistrationWindowStatus(s, now) === 'open');
-  if (open) {
-    return open;
-  }
-  return [...semesters].sort((a, b) => b.registrationStart.localeCompare(a.registrationStart))[0];
 }

@@ -1,0 +1,166 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+<section class="library">
+  <header class="library__header">
+    <h1>{{ 'library.title' | translate }}</h1>
+    @if (!connectivity.isOnline()) {
+      <p class="library__stale-note">
+        {{ 'dashboard.offline.lastUpdated' | translate: { time: lastUpdatedLabel() } }}
+      </p>
+    }
+  </header>
+
+  <section class="library__search" aria-label="Catalog search">
+    <div class="library__search-bar">
+      <ums-input
+        [value]="searchText()"
+        [placeholder]="'library.search.placeholder' | translate"
+        (valueChange)="searchText.set($event)"
+      />
+      <ums-button variant="primary" (click)="search()">{{
+        'library.search.action' | translate
+      }}</ums-button>
+    </div>
+
+    @if (store.searching()) {
+      <ums-skeleton variant="rect" height="4rem" />
+    } @else if (store.searchResults(); as results) {
+      @if (results.items.length === 0) {
+        <ums-empty-state [title]="'library.search.empty' | translate" />
+      } @else {
+        <ul class="library__book-list">
+          @for (book of results.items; track book.id) {
+            <li>
+              <div class="library__book-info">
+                <span class="library__book-title">{{ book.title }}</span>
+                <span class="library__book-meta">{{ book.authorNames.join(', ') }}</span>
+              </div>
+              <ums-badge [variant]="book.availableCopyCount > 0 ? 'success' : 'warning'" size="sm">
+                {{
+                  'library.search.copies'
+                    | translate: { available: book.availableCopyCount, total: book.totalCopyCount }
+                }}
+              </ums-badge>
+              @if (book.availableCopyCount === 0) {
+                <ums-button variant="secondary" size="sm" (click)="reserve(book.id)">
+                  {{ 'library.reserve.action' | translate }}
+                </ums-button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    }
+    @if (store.reservationError()) {
+      <p class="library__error">{{ translateMessage(store.reservationError()!) }}</p>
+    }
+  </section>
+
+  @if (store.loading() && !store.fetchedAt()) {
+    <ums-skeleton variant="rect" height="12rem" />
+  } @else if (store.error()) {
+    <ums-error-state
+      [title]="'library.error' | translate"
+      [retryLabel]="'common.retry' | translate"
+      (retry)="retry()"
+    />
+  } @else {
+    <section class="library__loans" aria-label="Current loans">
+      <h2>{{ 'library.loans.title' | translate }}</h2>
+      @if (store.activeLoans().length === 0) {
+        <ums-empty-state [title]="'library.loans.empty' | translate" />
+      } @else {
+        <ul>
+          @for (loan of store.activeLoans(); track loan.id) {
+            <li>
+              <span>{{
+                'library.loans.due' | translate: { days: daysUntilDueFor(loan.dueDate) }
+              }}</span>
+              @if (loan.isOverdue) {
+                <ums-badge variant="danger" size="sm">{{
+                  'library.loans.overdue' | translate
+                }}</ums-badge>
+              }
+              <ums-button variant="tertiary" size="sm" (click)="renew(loan.id)">
+                {{ 'library.loans.renew' | translate }}
+              </ums-button>
+            </li>
+          }
+        </ul>
+      }
+      @if (store.renewError()) {
+        <p class="library__error">{{ translateMessage(store.renewError()!) }}</p>
+      }
+    </section>
+
+    <section class="library__reservations" aria-label="Reservations">
+      <h2>{{ 'library.reservations.title' | translate }}</h2>
+      @if (store.reservations().length === 0) {
+        <ums-empty-state [title]="'library.reservations.empty' | translate" />
+      } @else {
+        <ul>
+          @for (reservation of store.reservations(); track reservation.id) {
+            <li>
+              @switch (reservation.status) {
+                @case ('Queued') {
+                  <ums-badge variant="info" size="sm">
+                    {{
+                      'library.reservations.queued' | translate: { position: reservation.priority }
+                    }}
+                  </ums-badge>
+                }
+                @case ('Offered') {
+                  @if (isReservationExpired(reservation.claimWindowExpiresAt)) {
+                    <ums-badge variant="danger" size="sm">{{
+                      'library.reservations.offerExpired' | translate
+                    }}</ums-badge>
+                  } @else {
+                    <ums-badge variant="success" size="sm">{{
+                      'library.reservations.offered' | translate
+                    }}</ums-badge>
+                  }
+                }
+                @case ('Claimed') {
+                  <ums-badge variant="success" size="sm">{{
+                    'library.reservations.claimed' | translate
+                  }}</ums-badge>
+                }
+                @case ('Expired') {
+                  <ums-badge variant="neutral" size="sm">{{
+                    'library.reservations.expired' | translate
+                  }}</ums-badge>
+                }
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="library__fines" aria-label="Fines">
+      <h2>{{ 'library.fines.title' | translate }}</h2>
+      @if (store.fines().length === 0) {
+        <ums-empty-state [title]="'library.fines.empty' | translate" />
+      } @else {
+        <ul>
+          @for (fine of store.fines(); track fine.id) {
+            <li>
+              <span class="ums-tnum">{{ fine.currency }} {{ fine.amount.toFixed(2) }}</span>
+              <ums-badge [variant]="fineStatusVariant(fine.status)" size="sm">
+                {{ 'library.fines.status.' + fine.status | translate }}
+              </ums-badge>
+              @if (fine.status === 'Accruing') {
+                <ums-button variant="tertiary" size="sm" (click)="settleFine(fine.id)">
+                  {{ 'library.fines.settle' | translate }}
+                </ums-button>
+              }
+            </li>
+          }
+        </ul>
+      }
+      @if (store.settleError()) {
+        <p class="library__error">{{ store.settleError() }}</p>
+      }
+    </section>
+  }
+</section>

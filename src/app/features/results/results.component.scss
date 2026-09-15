@@ -1,0 +1,108 @@
+:host {
+  display: block;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.results__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.results__stale-note {
+  font-size: var(--type-body-sm-font-size);
+  color: var(--color-text-muted);
+}
+
+.results__unofficial-note,
+.results__pdf-locale-note {
+  font-size: var(--type-body-sm-font-size);
+  color: var(--color-text-muted);
+}
+
+.results__trend,
+.results__transcript {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.results__semesters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.results__semester {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+
+  summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-weight: var(--type-heading-4-font-weight);
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+}
+
+.results__semester-avg {
+  font-size: var(--type-body-sm-font-size);
+  color: var(--color-text-muted);
+  font-weight: normal;
+}
+
+.results__grade-table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  margin-block-start: var(--space-3);
+
+  th,
+  td {
+    padding-block: var(--space-2);
+    padding-inline: var(--space-2);
+    text-align: start;
+    border-block-end: 1px solid var(--color-border);
+  }
+
+  th {
+    color: var(--color-text-muted);
+    font-weight: var(--type-heading-4-font-weight);
+    font-size: var(--type-body-sm-font-size);
+  }
+
+  td.ums-tnum,
+  th:nth-child(2),
+  th:nth-child(4) {
+    text-align: end;
+  }
+}
+
+.results__pdf-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.results__pdf-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}

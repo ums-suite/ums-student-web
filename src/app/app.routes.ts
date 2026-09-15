@@ -44,12 +44,42 @@ export const routes: Routes = [
             (m) => m.RegistrationComponent,
           ),
       },
-      { path: 'routine', loadComponent: placeholder, data: { label: 'Routine' } },
-      { path: 'grades', loadComponent: placeholder, data: { label: 'Grades' } },
-      { path: 'fees', loadComponent: placeholder, data: { label: 'Fees' } },
-      { path: 'hostel', loadComponent: placeholder, data: { label: 'Hostel' } },
-      { path: 'library', loadComponent: placeholder, data: { label: 'Library' } },
-      { path: 'requests', loadComponent: placeholder, data: { label: 'Requests' } },
+      {
+        path: 'routine',
+        loadComponent: () =>
+          import('./features/routine/routine.component').then((m) => m.RoutineComponent),
+      },
+      {
+        path: 'grades',
+        loadComponent: () =>
+          import('./features/results/results.component').then((m) => m.ResultsComponent),
+      },
+      {
+        path: 'fees',
+        loadComponent: () => import('./features/fees/fees.component').then((m) => m.FeesComponent),
+      },
+      {
+        path: 'hostel',
+        loadComponent: () =>
+          import('./features/hostel/hostel.component').then((m) => m.HostelComponent),
+      },
+      {
+        path: 'library',
+        loadComponent: () =>
+          import('./features/library/library.component').then((m) => m.LibraryComponent),
+      },
+      {
+        path: 'requests',
+        loadComponent: () =>
+          import('./features/requests/requests.component').then((m) => m.RequestsComponent),
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notifications/notifications.component').then(
+            (m) => m.NotificationsComponent,
+          ),
+      },
       { path: '**', loadComponent: placeholder, data: { label: 'This page' } },
     ],
   },
