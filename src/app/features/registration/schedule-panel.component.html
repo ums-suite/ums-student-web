@@ -1,0 +1,42 @@
+<aside class="schedule-panel" aria-label="My schedule">
+  <h2>{{ 'registration.mySchedule.title' | translate }}</h2>
+
+  @if (rows().length === 0) {
+    <ums-empty-state [title]="'registration.mySchedule.empty' | translate" />
+  } @else {
+    <p class="schedule-panel__credit-total">
+      {{ 'registration.mySchedule.creditTotal' | translate: { total: creditsTotal() } }}
+    </p>
+
+    <ul class="schedule-panel__list">
+      @for (row of rows(); track row.selection.offeringId) {
+        <li class="schedule-panel__row" [class.schedule-panel__row--conflict]="row.conflicts">
+          <div class="schedule-panel__row-main">
+            <span class="schedule-panel__day">{{ row.dayLabel }}</span>
+            <span class="schedule-panel__course">
+              {{ row.selection.courseCode }} — {{ row.selection.courseTitle }}
+            </span>
+            <span class="schedule-panel__time">
+              {{ row.selection.section.start }}–{{ row.selection.section.end }}
+            </span>
+          </div>
+
+          @if (row.conflicts) {
+            <ums-badge variant="danger" size="sm">
+              {{ 'registration.conflict.timetable' | translate }}
+            </ums-badge>
+          }
+
+          <div class="schedule-panel__row-actions">
+            <ums-button variant="primary" size="sm" (click)="register(row.selection)">
+              {{ 'registration.register' | translate }}
+            </ums-button>
+            <ums-button variant="ghost" size="sm" (click)="remove(row.selection.offeringId)">
+              {{ 'common.cancel' | translate }}
+            </ums-button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</aside>
