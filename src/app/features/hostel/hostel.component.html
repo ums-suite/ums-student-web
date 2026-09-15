@@ -1,0 +1,242 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+<section class="hostel">
+  <header class="hostel__header">
+    <h1>{{ 'hostel.title' | translate }}</h1>
+  </header>
+
+  @if (store.loading() && !store.fetchedAt()) {
+    <ums-skeleton variant="rect" height="16rem" />
+  } @else if (store.error()) {
+    <ums-error-state
+      [title]="'hostel.error' | translate"
+      [retryLabel]="'common.retry' | translate"
+      (retry)="retry()"
+    />
+  } @else if (store.activeAllocation(); as allocation) {
+    <!-- SWEB-24: an active Allocation exists -- Invariant SS8.6 means no application flow is ever shown alongside this. -->
+    <section class="hostel__allocation" aria-label="Your hostel allocation">
+      <ums-card
+        variant="stat"
+        [statLabel]="'hostel.allocation.title' | translate"
+        [statValue]="'hostel.allocation.status.' + allocation.status | translate"
+      >
+        <ums-badge [variant]="allocationStatusVariant()" size="md">
+          {{ 'hostel.allocation.status.' + allocation.status | translate }}
+        </ums-badge>
+      </ums-card>
+
+      @if (allocation.status === 'Pending' && store.hostelFeeInvoice(); as invoice) {
+        <section class="hostel__payment" aria-live="polite">
+          <h2>{{ 'hostel.payment.title' | translate }}</h2>
+          <p class="hostel__payment-amount ums-tnum">
+            {{ invoice.currency }} {{ invoice.totalAmount.toFixed(2) }}
+          </p>
+
+          @if (store.allocationMismatchNotice()) {
+            <ums-badge variant="danger" size="md">{{
+              'hostel.payment.mismatch' | translate
+            }}</ums-badge>
+          }
+
+          @if (store.hostelPaymentBlocking()) {
+            @if (store.hostelDispatchUnconfirmed()) {
+              <ums-badge variant="warning" size="md">{{
+                'fees.processing.unconfirmed.title' | translate
+              }}</ums-badge>
+              <p>{{ 'fees.processing.unconfirmed.body' | translate }}</p>
+              <ums-button variant="secondary" (click)="store.acknowledgeHostelDispatchUnresolved()">
+                {{ 'fees.processing.unconfirmed.acknowledge' | translate }}
+              </ums-button>
+            } @else {
+              <ums-badge variant="info" size="md">{{
+                'fees.processing.title' | translate
+              }}</ums-badge>
+            }
+          } @else {
+            <ums-button
+              variant="primary"
+              [disabled]="store.hostelPaymentSubmitting() || !connectivity.isOnline()"
+              (click)="payHostelFee()"
+            >
+              {{ 'fees.pay.now' | translate }}
+            </ums-button>
+          }
+          @if (store.hostelPaymentError()) {
+            <p class="hostel__payment-error">{{ store.hostelPaymentError() }}</p>
+          }
+        </section>
+      }
+
+      @if (allocation.status === 'Active') {
+        <ums-button variant="secondary" [disabled]="!connectivity.isOnline()" (click)="checkOut()">
+          {{ 'hostel.checkOut.action' | translate }}
+        </ums-button>
+        <p class="hostel__checkin-note">{{ 'hostel.checkIn.note' | translate }}</p>
+      }
+
+      <section class="hostel__complaints" aria-label="Complaints">
+        <h2>{{ 'hostel.complaint.title' | translate }}</h2>
+
+        <div class="hostel__complaint-form">
+          <ums-select
+            [options]="[
+              { value: 'Maintenance', label: 'hostel.complaint.category.Maintenance' | translate },
+              {
+                value: 'RoommateDispute',
+                label: 'hostel.complaint.category.RoommateDispute' | translate,
+              },
+              { value: 'Damage', label: 'hostel.complaint.category.Damage' | translate },
+              { value: 'Other', label: 'hostel.complaint.category.Other' | translate },
+            ]"
+            [value]="complaintCategory()"
+            (valueChange)="onComplaintCategoryChange($event)"
+          />
+          <ums-textarea
+            [value]="complaintDescription()"
+            [placeholder]="'hostel.complaint.description.placeholder' | translate"
+            (valueChange)="complaintDescription.set($event)"
+          />
+          <ums-button
+            variant="primary"
+            [disabled]="store.complaintSubmitting() || !connectivity.isOnline()"
+            (click)="submitComplaint()"
+          >
+            {{ 'hostel.complaint.submit' | translate }}
+          </ums-button>
+          @if (store.complaintError()) {
+            <p class="hostel__payment-error">{{ store.complaintError() }}</p>
+          }
+        </div>
+
+        @if (store.complaints().length === 0) {
+          <ums-empty-state [title]="'hostel.complaint.empty' | translate" />
+        } @else {
+          <ul class="hostel__complaint-list">
+            @for (complaint of store.complaints(); track complaint.id) {
+              <li>
+                <span>{{ 'hostel.complaint.category.' + complaint.category | translate }}</span>
+                <ums-badge variant="info" size="sm">{{
+                  'hostel.complaint.status.' + complaint.status | translate
+                }}</ums-badge>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </section>
+  } @else {
+    <!-- SWEB-23: no active Allocation -- show any application history + the new-application flow. -->
+    @if (store.applications().length > 0) {
+      <section aria-label="Your applications">
+        <h2>{{ 'hostel.application.history.title' | translate }}</h2>
+        <ums-timeline [entries]="applicationTimeline()" />
+      </section>
+    }
+
+    <section class="hostel__apply" aria-label="Apply for hostel">
+      <h2>{{ 'hostel.apply.title' | translate }}</h2>
+
+      <ums-select
+        [options]="windowOptions()"
+        [value]="store.selectedWindow()?.id ?? ''"
+        (valueChange)="onWindowSelected($event)"
+      />
+
+      @if (store.selectedWindow(); as window) {
+        <section class="hostel__eligibility" aria-label="Eligibility self-check">
+          <h3>{{ 'hostel.eligibility.title' | translate }}</h3>
+          <p class="hostel__eligibility-note">{{ 'hostel.eligibility.note' | translate }}</p>
+
+          <ums-form-field
+            #yearField="umsFormField"
+            [label]="'hostel.eligibility.yearOfStudy' | translate"
+          >
+            <ums-input
+              [id]="yearField.controlId()"
+              type="number"
+              [value]="yearOfStudy().toString()"
+              (valueChange)="yearOfStudy.set($event ? +$event : 1)"
+            />
+          </ums-form-field>
+
+          @if (eligibilitySelfCheck(); as check) {
+            <ums-badge [variant]="check.likelyEligible ? 'success' : 'warning'" size="md">
+              {{
+                (check.likelyEligible ? 'hostel.eligibility.likely' : 'hostel.eligibility.unlikely')
+                  | translate
+              }}
+            </ums-badge>
+          }
+
+          <section class="hostel__preferences" aria-label="Room preferences">
+            <h3>{{ 'hostel.preferences.title' | translate }}</h3>
+            <p>{{ 'hostel.preferences.note' | translate }}</p>
+
+            <div class="hostel__preference-picker">
+              <ums-select
+                [options]="hostelOptions()"
+                [value]="selectedHostelId()"
+                (valueChange)="selectedHostelId.set($event)"
+              />
+              <ums-select
+                [options]="roomTypeOptions"
+                [value]="selectedRoomType()"
+                (valueChange)="onRoomTypeChange($event)"
+              />
+              <ums-button variant="secondary" (click)="addPreference()">{{
+                'hostel.preferences.add' | translate
+              }}</ums-button>
+            </div>
+
+            @if (store.preferenceDraft().length === 0) {
+              <ums-empty-state [title]="'hostel.preferences.empty' | translate" />
+            } @else {
+              <ol class="hostel__preference-list">
+                @for (
+                  pref of store.preferenceDraft();
+                  track pref.hostelId + pref.preferredRoomType;
+                  let i = $index
+                ) {
+                  <li>
+                    <span>{{ pref.hostelName }} — {{ pref.preferredRoomType }}</span>
+                    <div class="hostel__preference-actions">
+                      <ums-button variant="ghost" size="sm" (click)="store.movePreferenceUp(i)"
+                        >↑</ums-button
+                      >
+                      <ums-button variant="ghost" size="sm" (click)="store.movePreferenceDown(i)"
+                        >↓</ums-button
+                      >
+                      <ums-button
+                        variant="ghost"
+                        size="sm"
+                        (click)="store.removePreferenceFromDraft(i)"
+                      >
+                        {{ 'common.cancel' | translate }}
+                      </ums-button>
+                    </div>
+                  </li>
+                }
+              </ol>
+            }
+
+            <ums-button
+              variant="primary"
+              [disabled]="
+                store.preferenceDraft().length === 0 ||
+                store.submittingApplication() ||
+                !connectivity.isOnline()
+              "
+              (click)="submitApplication()"
+            >
+              {{ 'hostel.apply.submit' | translate }}
+            </ums-button>
+            @if (store.applyError()) {
+              <p class="hostel__payment-error">{{ translateMessage(store.applyError()!) }}</p>
+            }
+          </section>
+        </section>
+      }
+    </section>
+  }
+</section>

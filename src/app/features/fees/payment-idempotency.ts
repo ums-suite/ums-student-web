@@ -1,4 +1,7 @@
 import type { PaymentStatus } from '../../core/api/finance.types';
+import { generateIdempotencyKey } from '../../core/util/idempotency-key.util';
+
+export { generateIdempotencyKey };
 
 /**
  * Pure payment-idempotency logic (SWEB-21/22, test-coverage NFR). Deliberately free of
@@ -37,17 +40,4 @@ export function isTerminalPaymentStatus(status: PaymentStatus): boolean {
  */
 export function isConfirmedPaymentStatus(status: PaymentStatus): boolean {
   return CONFIRMED_STATUSES.has(status);
-}
-
-/**
- * A fresh `IdempotencyKey` per NEW payment attempt (never reused across attempts). Falls back to a
- * timestamp+random string on a runtime with no `crypto.randomUUID` (older mobile WebViews) --
- * never throws, since a payment screen must never hard-fail merely because it couldn't mint a
- * fancy UUID.
- */
-export function generateIdempotencyKey(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return `idempotency-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }

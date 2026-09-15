@@ -1,0 +1,101 @@
+:host {
+  display: block;
+}
+
+.hostel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.hostel__allocation,
+.hostel__apply {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.hostel__payment,
+.hostel__complaints,
+.hostel__eligibility,
+.hostel__preferences {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.hostel__payment-amount {
+  font-size: var(--type-heading-4-font-size);
+  font-weight: var(--type-heading-4-font-weight);
+}
+
+.hostel__payment-error {
+  color: var(--color-danger);
+  font-size: var(--type-body-sm-font-size);
+}
+
+.hostel__checkin-note,
+.hostel__eligibility-note {
+  font-size: var(--type-body-sm-font-size);
+  color: var(--color-text-muted);
+}
+
+.hostel__complaint-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-inline-size: 32rem;
+}
+
+.hostel__complaint-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hostel__complaint-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-alt);
+}
+
+.hostel__preference-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.hostel__preference-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+}
+
+.hostel__preference-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-alt);
+}
+
+.hostel__preference-actions {
+  display: flex;
+  gap: var(--space-1);
+}
