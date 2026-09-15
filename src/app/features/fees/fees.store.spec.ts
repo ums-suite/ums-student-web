@@ -113,7 +113,7 @@ describe('FeesStore', () => {
     it('persists the idempotency key/invoice/amount to sessionStorage before dispatching', () => {
       store.initiatePayment();
       // Written synchronously, before the HTTP response is even flushed.
-      const pending = readPendingPaymentAttempt();
+      const pending = readPendingPaymentAttempt('fees');
       expect(pending?.invoiceId).toBe('inv-1');
       expect(pending?.amount).toBe(500);
       expect(pending?.paymentId).toBeNull();
@@ -138,7 +138,7 @@ describe('FeesStore', () => {
         .expectOne(`${baseUrl}/api/v1/finance/payments`)
         .flush({ payment: { id: 'pay-1', status: 'Initiated' }, redirectUrl: 'https://gw/pay' });
 
-      expect(readPendingPaymentAttempt()?.paymentId).toBe('pay-1');
+      expect(readPendingPaymentAttempt('fees')?.paymentId).toBe('pay-1');
       expect(store.submitting()).toBeFalse();
       expect(store.redirectUrl()).toBe('https://gw/pay');
 
@@ -148,7 +148,7 @@ describe('FeesStore', () => {
         .flush({ id: 'pay-1', status: 'Successful' });
 
       expect(store.paymentStatus()?.status).toBe('Successful');
-      expect(readPendingPaymentAttempt()).toBeNull();
+      expect(readPendingPaymentAttempt('fees')).toBeNull();
 
       // A confirmed terminal status triggers a reload of invoices/receipts.
       httpMock
@@ -173,7 +173,7 @@ describe('FeesStore', () => {
         .flush({ id: 'pay-1', status: 'Failed' });
 
       expect(store.paymentStatus()?.status).toBe('Failed');
-      expect(readPendingPaymentAttempt()).toBeNull();
+      expect(readPendingPaymentAttempt('fees')).toBeNull();
       expect(store.hasBlockingAttempt()).toBeFalse();
     });
 
@@ -183,7 +183,7 @@ describe('FeesStore', () => {
         .expectOne(`${baseUrl}/api/v1/finance/payments`)
         .flush({ title: 'Rejected' }, { status: 409, statusText: 'Conflict' });
 
-      expect(readPendingPaymentAttempt()).toBeNull();
+      expect(readPendingPaymentAttempt('fees')).toBeNull();
       expect(store.paymentError()).toBeTruthy();
       expect(store.submitting()).toBeFalse();
     });
@@ -193,7 +193,7 @@ describe('FeesStore', () => {
       const req = httpMock.expectOne(`${baseUrl}/api/v1/finance/payments`);
       req.error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
 
-      expect(readPendingPaymentAttempt()).not.toBeNull();
+      expect(readPendingPaymentAttempt('fees')).not.toBeNull();
       expect(store.dispatchUnconfirmed()).toBeTrue();
       expect(store.submitting()).toBeFalse();
     });
@@ -206,7 +206,7 @@ describe('FeesStore', () => {
 
       store.acknowledgePendingDispatchResolved();
       expect(store.dispatchUnconfirmed()).toBeFalse();
-      expect(readPendingPaymentAttempt()).toBeNull();
+      expect(readPendingPaymentAttempt('fees')).toBeNull();
     });
 
     it('does not dispatch a second payment while one is already in flight (submitting)', () => {
@@ -226,7 +226,7 @@ describe('FeesStore', () => {
       store.initiatePayment();
 
       expect(store.paymentError()).toBe('fees.payment.offline');
-      expect(readPendingPaymentAttempt()).toBeNull();
+      expect(readPendingPaymentAttempt('fees')).toBeNull();
       httpMock.expectNone(`${baseUrl}/api/v1/finance/payments`);
     });
   });

@@ -9,18 +9,18 @@ describe('payment-session-storage.util', () => {
   afterEach(() => sessionStorage.clear());
 
   it('reads null when nothing was ever written', () => {
-    expect(readPendingPaymentAttempt()).toBeNull();
+    expect(readPendingPaymentAttempt('fees')).toBeNull();
   });
 
   it('round-trips a written attempt', () => {
-    writePendingPaymentAttempt({
+    writePendingPaymentAttempt('fees', {
       idempotencyKey: 'key-1',
       invoiceId: 'inv-1',
       amount: 500,
       currency: 'BDT',
       paymentId: null,
     });
-    expect(readPendingPaymentAttempt()).toEqual({
+    expect(readPendingPaymentAttempt('fees')).toEqual({
       idempotencyKey: 'key-1',
       invoiceId: 'inv-1',
       amount: 500,
@@ -29,21 +29,41 @@ describe('payment-session-storage.util', () => {
     });
   });
 
+  it('keeps different namespaces isolated (fees vs. hostel-fee)', () => {
+    writePendingPaymentAttempt('fees', {
+      idempotencyKey: 'key-fees',
+      invoiceId: 'inv-1',
+      amount: 500,
+      currency: 'BDT',
+      paymentId: null,
+    });
+    writePendingPaymentAttempt('hostel-fee', {
+      idempotencyKey: 'key-hostel',
+      invoiceId: 'inv-2',
+      amount: 3000,
+      currency: 'BDT',
+      paymentId: null,
+    });
+
+    expect(readPendingPaymentAttempt('fees')?.idempotencyKey).toBe('key-fees');
+    expect(readPendingPaymentAttempt('hostel-fee')?.idempotencyKey).toBe('key-hostel');
+  });
+
   it('clears a written attempt', () => {
-    writePendingPaymentAttempt({
+    writePendingPaymentAttempt('fees', {
       idempotencyKey: 'key-1',
       invoiceId: 'inv-1',
       amount: 500,
       currency: 'BDT',
       paymentId: null,
     });
-    clearPendingPaymentAttempt();
-    expect(readPendingPaymentAttempt()).toBeNull();
+    clearPendingPaymentAttempt('fees');
+    expect(readPendingPaymentAttempt('fees')).toBeNull();
   });
 
   it('degrades to null on malformed stored JSON', () => {
     sessionStorage.setItem('ums-student-web:fees:pending-payment', '{not json');
-    expect(readPendingPaymentAttempt()).toBeNull();
+    expect(readPendingPaymentAttempt('fees')).toBeNull();
   });
 
   it('write and clear are best-effort and never throw even if storage fails', () => {
@@ -51,7 +71,7 @@ describe('payment-session-storage.util', () => {
       throw new DOMException('quota exceeded');
     });
     expect(() =>
-      writePendingPaymentAttempt({
+      writePendingPaymentAttempt('fees', {
         idempotencyKey: 'k',
         invoiceId: 'i',
         amount: 1,
@@ -63,6 +83,6 @@ describe('payment-session-storage.util', () => {
     spyOn(sessionStorage, 'removeItem').and.callFake(() => {
       throw new DOMException('failed');
     });
-    expect(() => clearPendingPaymentAttempt()).not.toThrow();
+    expect(() => clearPendingPaymentAttempt('fees')).not.toThrow();
   });
 });

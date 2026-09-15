@@ -140,7 +140,7 @@ export class FeesStore {
   }
 
   private resumePendingAttempt(invoices: readonly InvoiceDto[]): void {
-    const pending = readPendingPaymentAttempt();
+    const pending = readPendingPaymentAttempt('fees');
     this.pendingAttemptState.set(pending);
     if (!pending) {
       return;
@@ -189,7 +189,7 @@ export class FeesStore {
       paymentId: null,
     };
     // Written before the request is even dispatched -- design-decisions.md's own explicit rule.
-    writePendingPaymentAttempt(attempt);
+    writePendingPaymentAttempt('fees', attempt);
     this.pendingAttemptState.set(attempt);
 
     this.submittingState.set(true);
@@ -199,7 +199,7 @@ export class FeesStore {
       next: ({ payment, redirectUrl }) => {
         this.submittingState.set(false);
         const updated: PendingPaymentAttempt = { ...attempt, paymentId: payment.id };
-        writePendingPaymentAttempt(updated);
+        writePendingPaymentAttempt('fees', updated);
         this.pendingAttemptState.set(updated);
         this.paymentStatusState.set(payment);
         this.redirectUrlState.set(redirectUrl);
@@ -214,7 +214,7 @@ export class FeesStore {
           return;
         }
         // A definite server-returned rejection -- safe to clear, the server never started a Payment.
-        clearPendingPaymentAttempt();
+        clearPendingPaymentAttempt('fees');
         this.pendingAttemptState.set(null);
         this.paymentErrorState.set(error.message || 'fees.payment.error');
       },
@@ -223,7 +223,7 @@ export class FeesStore {
 
   /** The student's own explicit acknowledgement of the {@link dispatchUnconfirmed} case (see class doc) -- never inferred automatically. */
   acknowledgePendingDispatchResolved(): void {
-    clearPendingPaymentAttempt();
+    clearPendingPaymentAttempt('fees');
     this.pendingAttemptState.set(null);
     this.paymentStatusState.set(null);
     this.redirectUrlState.set(null);
@@ -238,7 +238,7 @@ export class FeesStore {
       this.paymentStatusState.set(payment);
       if (isTerminalPaymentStatus(payment.status)) {
         this.stopPolling();
-        clearPendingPaymentAttempt();
+        clearPendingPaymentAttempt('fees');
         this.pendingAttemptState.set(null);
         if (isConfirmedPaymentStatus(payment.status)) {
           this.load();

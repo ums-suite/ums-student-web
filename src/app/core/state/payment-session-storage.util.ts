@@ -13,8 +13,15 @@
  * as the problem requires, per design-decisions.md's own trade-off note. Cleared on logout
  * alongside the rest of session cleanup is the caller's own responsibility (this module is a pure
  * storage primitive, not a session-lifecycle hook).
+ *
+ * Namespaced (`namespace` param) so two independent money-moving flows in this app -- Fees'
+ * general invoice payment (SWEB-21/22) and Hostel's fee payment (SWEB-24, "reuse SWEB-21's
+ * idempotency pattern") -- never collide in the same storage slot; a student could plausibly have
+ * both a tuition invoice and a hostel-fee invoice pending payment in the same browser session.
  */
-const STORAGE_KEY = 'ums-student-web:fees:pending-payment';
+function storageKey(namespace: string): string {
+  return `ums-student-web:${namespace}:pending-payment`;
+}
 
 /**
  * `paymentId` starts `null` -- filled in once the initiating `POST /finance/payments` call
@@ -31,27 +38,30 @@ export interface PendingPaymentAttempt {
   readonly paymentId: string | null;
 }
 
-export function readPendingPaymentAttempt(): PendingPaymentAttempt | null {
+export function readPendingPaymentAttempt(namespace: string): PendingPaymentAttempt | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(storageKey(namespace));
     return raw ? (JSON.parse(raw) as PendingPaymentAttempt) : null;
   } catch {
     return null;
   }
 }
 
-export function writePendingPaymentAttempt(attempt: PendingPaymentAttempt): void {
+export function writePendingPaymentAttempt(
+  namespace: string,
+  attempt: PendingPaymentAttempt,
+): void {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(attempt));
+    sessionStorage.setItem(storageKey(namespace), JSON.stringify(attempt));
   } catch {
     // Best-effort only -- a private-browsing/storage-disabled session simply loses the ability to
     // resume-detect this specific attempt across a reload; it never blocks the payment call itself.
   }
 }
 
-export function clearPendingPaymentAttempt(): void {
+export function clearPendingPaymentAttempt(namespace: string): void {
   try {
-    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(storageKey(namespace));
   } catch {
     // Best-effort only.
   }
