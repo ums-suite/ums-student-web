@@ -1,0 +1,130 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+<section class="fees">
+  <header class="fees__header">
+    <h1>{{ 'fees.title' | translate }}</h1>
+
+    @if (!connectivity.isOnline()) {
+      <p class="fees__stale-note">
+        {{ 'dashboard.offline.lastUpdated' | translate: { time: lastUpdatedLabel() } }}
+      </p>
+    }
+  </header>
+
+  @if (store.loading() && !store.fetchedAt()) {
+    <ums-skeleton variant="rect" height="16rem" />
+  } @else if (store.error()) {
+    <ums-error-state
+      [title]="'fees.error' | translate"
+      [retryLabel]="'common.retry' | translate"
+      (retry)="retry()"
+    />
+  } @else {
+    <ums-card
+      variant="stat"
+      [statLabel]="'fees.outstanding.title' | translate"
+      [statValue]="
+        store.outstandingBalance() > 0
+          ? store.outstandingBalance().toFixed(2)
+          : ('fees.outstanding.clear' | translate)
+      "
+    >
+      @if (totalAllInvoiceAmount() > 0) {
+        <ums-progress-bar
+          [value]="paidAmount()"
+          [max]="totalAllInvoiceAmount()"
+          tone="success"
+          [label]="
+            'fees.progress.label'
+              | translate: { paid: paidAmount(), total: totalAllInvoiceAmount() }
+          "
+        />
+      }
+    </ums-card>
+
+    @if (store.hasBlockingAttempt()) {
+      <section class="fees__processing" aria-live="polite">
+        @if (store.dispatchUnconfirmed()) {
+          <ums-badge variant="warning" size="md">{{
+            'fees.processing.unconfirmed.title' | translate
+          }}</ums-badge>
+          <p>{{ 'fees.processing.unconfirmed.body' | translate }}</p>
+          <ums-button variant="secondary" (click)="acknowledgeUnconfirmed()">
+            {{ 'fees.processing.unconfirmed.acknowledge' | translate }}
+          </ums-button>
+        } @else if (isConfirmedSuccess()) {
+          <ums-badge variant="success" size="md">{{
+            'fees.processing.success' | translate
+          }}</ums-badge>
+        } @else {
+          <ums-badge variant="info" size="md">{{ 'fees.processing.title' | translate }}</ums-badge>
+          <p>{{ 'fees.processing.body' | translate }}</p>
+        }
+      </section>
+    }
+
+    @if (store.outstandingInvoices().length === 0) {
+      <ums-empty-state [title]="'fees.outstanding.empty' | translate" />
+    } @else {
+      <ul class="fees__invoice-list">
+        @for (invoice of store.outstandingInvoices(); track invoice.id) {
+          <li class="fees__invoice-card">
+            <div class="fees__invoice-info">
+              <span class="fees__invoice-type">{{ invoice.feeType }}</span>
+              <span class="fees__invoice-amount ums-tnum"
+                >{{ invoice.currency }} {{ invoice.totalAmount.toFixed(2) }}</span
+              >
+            </div>
+
+            @if (store.selectedInvoice()?.id === invoice.id) {
+              <ums-button
+                variant="primary"
+                [disabled]="
+                  store.submitting() || store.hasBlockingAttempt() || !connectivity.isOnline()
+                "
+                (click)="pay()"
+              >
+                {{
+                  store.submitting()
+                    ? ('fees.pay.submitting' | translate)
+                    : ('fees.pay.now' | translate)
+                }}
+              </ums-button>
+              @if (store.paymentError()) {
+                <p class="fees__payment-error">{{ store.paymentError() }}</p>
+              }
+            } @else {
+              <ums-button variant="secondary" (click)="selectInvoice(invoice)">
+                {{ 'fees.pay.select' | translate }}
+              </ums-button>
+            }
+          </li>
+        }
+      </ul>
+    }
+
+    <section class="fees__history" aria-label="Payment history">
+      <h2>{{ 'fees.history.title' | translate }}</h2>
+      @if (store.receipts().length === 0) {
+        <ums-empty-state [title]="'fees.history.empty' | translate" />
+      } @else {
+        <ul>
+          @for (receipt of store.receipts(); track receipt.document.id) {
+            <li>
+              <span>{{ 'fees.history.receipt' | translate: { id: receipt.paymentId } }}</span>
+              @if (receipt.document.status === 'Ready' && receipt.document.downloadUrl; as url) {
+                <a [href]="url" target="_blank" rel="noopener">{{
+                  'fees.history.download' | translate
+                }}</a>
+              } @else {
+                <ums-badge variant="info" size="sm">{{
+                  'fees.history.preparing' | translate
+                }}</ums-badge>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</section>

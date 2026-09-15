@@ -174,6 +174,32 @@ export const EN_TRANSLATIONS: TranslationDictionary = {
   'results.transcript.status.Rejected': 'Request rejected',
   'results.transcript.status.Fulfilled': 'Ready',
 
+  'fees.title': 'Fees & Payments',
+  'fees.error': 'We could not load your fees. Please try again.',
+  'fees.outstanding.title': 'Outstanding balance',
+  'fees.outstanding.clear': 'No outstanding balance',
+  'fees.outstanding.empty': 'You have no outstanding invoices.',
+  'fees.progress.label': '{{paid}} / {{total}} paid',
+  'fees.pay.select': 'Select',
+  'fees.pay.now': 'Pay Now',
+  'fees.pay.submitting': 'Submitting…',
+  'fees.payment.offline':
+    "You're offline -- payment requires a live connection. Please reconnect and try again.",
+  'fees.payment.error': 'We could not start this payment. Please try again.',
+  'fees.processing.title': 'Processing your payment…',
+  'fees.processing.body':
+    'This can take a moment while the gateway confirms your payment. You can safely leave this page and check back -- we will never show a duplicate charge prompt.',
+  'fees.processing.success': 'Payment confirmed.',
+  'fees.processing.unconfirmed.title': "We couldn't confirm your last attempt",
+  'fees.processing.unconfirmed.body':
+    'Your last payment request left this device, but we never received a response -- it may or may not have gone through. Please check your Payment History below, or your bank/gateway statement, before trying again.',
+  'fees.processing.unconfirmed.acknowledge': "I've checked -- let me try again",
+  'fees.history.title': 'Payment history',
+  'fees.history.empty': 'No completed payments yet.',
+  'fees.history.receipt': 'Receipt for payment {{id}}',
+  'fees.history.download': 'Download receipt',
+  'fees.history.preparing': 'Preparing…',
+
   'common.retry': 'Retry',
   'common.cancel': 'Cancel',
   'common.close': 'Close',
