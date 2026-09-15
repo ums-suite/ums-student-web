@@ -1,0 +1,13 @@
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-inline-size: 24rem;
+  margin-inline: auto;
+  padding-block-start: var(--space-8);
+}
+
+.login-form__server-error {
+  color: var(--color-danger);
+  font-size: var(--type-body-sm-font-size);
+}
