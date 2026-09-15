@@ -1,0 +1,83 @@
+:host {
+  display: block;
+}
+
+.library {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.library__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.library__stale-note {
+  font-size: var(--type-body-sm-font-size);
+  color: var(--color-text-muted);
+}
+
+.library__search {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.library__search-bar {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.library__book-list,
+.library__loans ul,
+.library__reservations ul,
+.library__fines ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.library__book-list li,
+.library__loans li,
+.library__reservations li,
+.library__fines li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.library__book-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.library__book-meta {
+  font-size: var(--type-body-sm-font-size);
+  color: var(--color-text-muted);
+}
+
+.library__error {
+  color: var(--color-danger);
+  font-size: var(--type-body-sm-font-size);
+}
+
+.library__loans,
+.library__reservations,
+.library__fines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
