@@ -1,12 +1,12 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { CurrentUserService, type UmsApiError } from '@ums/shared';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, map, of } from 'rxjs';
 import { AcademicApi } from '../../core/api/academic.api';
 import type { ProgramDto, TranscriptDto } from '../../core/api/academic.types';
 import { FinanceApi } from '../../core/api/finance.api';
 import type { InvoiceDto } from '../../core/api/finance.types';
 import { HostelApi } from '../../core/api/hostel.api';
-import type { AllocationDto } from '../../core/api/hostel.types';
+import { NON_TERMINAL_ALLOCATION_STATUSES, type AllocationDto } from '../../core/api/hostel.types';
 import { StudentApi } from '../../core/api/student.api';
 import type { StudentDto } from '../../core/api/student.types';
 import { ConnectivityReconciliationService } from '../../core/pwa/connectivity-reconciliation.service';
@@ -82,9 +82,13 @@ export class DashboardStore {
       invoices: userId
         ? this.financeApi.listMyInvoices(userId).pipe(catchError(() => of<InvoiceDto[]>([])))
         : of<InvoiceDto[]>([]),
-      allocation: this.hostelApi
-        .getMyAllocation()
-        .pipe(catchError(() => of<AllocationDto | null>(null))),
+      allocation: this.hostelApi.getMyAllocations().pipe(
+        map(
+          (allocations) =>
+            allocations.find((a) => NON_TERMINAL_ALLOCATION_STATUSES.has(a.status)) ?? null,
+        ),
+        catchError(() => of<AllocationDto | null>(null)),
+      ),
       transcript: this.academicApi
         .getMyTranscript(student.id)
         .pipe(
