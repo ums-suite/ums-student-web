@@ -1,0 +1,81 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+<section class="requests">
+  <header class="requests__header">
+    <h1>{{ 'requests.title' | translate }}</h1>
+  </header>
+
+  <section class="requests__form" aria-label="Submit a request">
+    <h2>{{ 'requests.form.title' | translate }}</h2>
+    <ums-select
+      [options]="typeOptions"
+      [value]="requestType()"
+      (valueChange)="onTypeChange($event)"
+    />
+
+    @switch (requestType()) {
+      @case ('IdReissue') {
+        <ums-form-field #reasonField="umsFormField" [label]="'requests.form.reason' | translate">
+          <ums-input
+            [id]="reasonField.controlId()"
+            [value]="reason()"
+            (valueChange)="reason.set($event)"
+          />
+        </ums-form-field>
+      }
+      @case ('TranscriptRequest') {
+        <ums-form-field #purposeField="umsFormField" [label]="'requests.form.purpose' | translate">
+          <ums-input
+            [id]="purposeField.controlId()"
+            [value]="purpose()"
+            (valueChange)="purpose.set($event)"
+          />
+        </ums-form-field>
+      }
+      @case ('Grievance') {
+        <ums-textarea
+          [value]="description()"
+          [placeholder]="'requests.form.description' | translate"
+          (valueChange)="description.set($event)"
+        />
+        <label class="requests__checkbox-label">
+          <input
+            type="checkbox"
+            [checked]="isAgainstOwnDepartmentHead()"
+            (change)="isAgainstOwnDepartmentHead.set($any($event.target).checked)"
+          />
+          {{ 'requests.form.againstDepartmentHead' | translate }}
+        </label>
+      }
+    }
+
+    <ums-button
+      variant="primary"
+      [disabled]="store.submitting() || !connectivity.isOnline()"
+      (click)="submit()"
+    >
+      {{ 'requests.form.submit' | translate }}
+    </ums-button>
+    @if (store.submitError()) {
+      <p class="requests__error">{{ translateMessage(store.submitError()!) }}</p>
+    }
+  </section>
+
+  <section class="requests__history" aria-label="Your requests">
+    <h2>{{ 'requests.history.title' | translate }}</h2>
+
+    @if (store.loading() && !store.requests().length) {
+      <ums-skeleton variant="rect" height="10rem" />
+    } @else if (store.error()) {
+      <ums-error-state
+        [title]="'requests.error' | translate"
+        [retryLabel]="'common.retry' | translate"
+        (retry)="retry()"
+      />
+    } @else if (store.requests().length === 0) {
+      <ums-empty-state [title]="'requests.history.empty' | translate" />
+    } @else {
+      <ums-timeline [entries]="timelineEntries()" />
+    }
+  </section>
+</section>

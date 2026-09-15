@@ -25,7 +25,7 @@ describe('AppShellComponent', () => {
     const items = (
       fixture.componentInstance as unknown as { navItems: () => unknown[] }
     ).navItems();
-    expect(items.length).toBe(8);
+    expect(items.length).toBe(9);
   });
 
   it('toggleLocale flips between en and bn', () => {

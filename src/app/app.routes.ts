@@ -68,7 +68,18 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/library/library.component').then((m) => m.LibraryComponent),
       },
-      { path: 'requests', loadComponent: placeholder, data: { label: 'Requests' } },
+      {
+        path: 'requests',
+        loadComponent: () =>
+          import('./features/requests/requests.component').then((m) => m.RequestsComponent),
+      },
+      {
+        path: 'notifications',
+        loadComponent: () =>
+          import('./features/notifications/notifications.component').then(
+            (m) => m.NotificationsComponent,
+          ),
+      },
       { path: '**', loadComponent: placeholder, data: { label: 'This page' } },
     ],
   },

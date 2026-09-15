@@ -1,0 +1,134 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+<section class="notifications">
+  <header class="notifications__header">
+    <h1>{{ 'notifications.title' | translate }}</h1>
+  </header>
+
+  @if (store.loading() && !store.fetchedAt()) {
+    <ums-skeleton variant="rect" height="16rem" />
+  } @else if (store.error()) {
+    <ums-error-state
+      [title]="'notifications.error' | translate"
+      [retryLabel]="'common.retry' | translate"
+      (retry)="retry()"
+    />
+  } @else {
+    <section class="notifications__notices" aria-label="Notices">
+      <h2>{{ 'notifications.notices.title' | translate }}</h2>
+      @if (store.notices().length === 0) {
+        <ums-empty-state [title]="'notifications.notices.empty' | translate" />
+      } @else {
+        <ul>
+          @for (notice of store.notices(); track notice.id) {
+            <li [class.notifications__notice--urgent]="notice.isUrgent">
+              <div class="notifications__notice-body">
+                <h3>{{ notice.title }}</h3>
+                <p>{{ notice.body }}</p>
+                @if (isNoticeFallback(notice.id)) {
+                  <span class="notifications__fallback-note">{{
+                    'notifications.notices.shownInEnglish' | translate
+                  }}</span>
+                }
+              </div>
+              @if (notice.isUrgent) {
+                <ums-badge variant="danger" size="sm">{{
+                  'notifications.notices.urgent' | translate
+                }}</ums-badge>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="notifications__center" aria-label="Notification center">
+      <div class="notifications__center-header">
+        <h2>{{ 'notifications.center.title' | translate }}</h2>
+        @if (store.unreadCount() > 0) {
+          <ums-badge variant="info" size="sm">{{
+            'notifications.center.unread' | translate: { count: store.unreadCount() }
+          }}</ums-badge>
+          <ums-button variant="tertiary" size="sm" (click)="markAllRead()">
+            {{ 'notifications.center.markAllRead' | translate }}
+          </ums-button>
+        }
+      </div>
+
+      @if (store.inbox().length === 0) {
+        <ums-empty-state [title]="'notifications.center.empty' | translate" />
+      } @else {
+        <ul>
+          @for (item of store.inbox(); track item.id) {
+            <li [class.notifications__item--unread]="!item.readAt">
+              <span>{{ item.renderedSubject ?? item.renderedBody }}</span>
+              @if (!item.readAt) {
+                <ums-button variant="ghost" size="sm" (click)="markRead(item.id)">
+                  {{ 'notifications.center.markRead' | translate }}
+                </ums-button>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="notifications__push" aria-label="Push notifications">
+      <h2>{{ 'notifications.push.title' | translate }}</h2>
+      <p>{{ 'notifications.push.note' | translate }}</p>
+
+      @if (pushOptIn.optedIn()) {
+        <ums-badge variant="success" size="md">{{
+          'notifications.push.enabled' | translate
+        }}</ums-badge>
+        <ums-button variant="secondary" (click)="disablePush()">{{
+          'notifications.push.disable' | translate
+        }}</ums-button>
+      } @else {
+        <ums-button variant="primary" (click)="requestPushOptIn()">{{
+          'notifications.push.enable' | translate
+        }}</ums-button>
+        @if (pushOptIn.permissionState() === 'denied') {
+          <p class="notifications__fallback-note">{{ 'notifications.push.denied' | translate }}</p>
+        }
+      }
+    </section>
+
+    <section class="notifications__preferences" aria-label="Notification preferences">
+      <h2>{{ 'notifications.preferences.title' | translate }}</h2>
+      <p>{{ 'notifications.preferences.note' | translate }}</p>
+
+      <div class="notifications__preferences-table" role="table">
+        <div
+          class="notifications__preferences-row notifications__preferences-row--header"
+          role="row"
+        >
+          <span role="columnheader"></span>
+          @for (channel of channels; track channel) {
+            <span role="columnheader">{{ 'notifications.channel.' + channel | translate }}</span>
+          }
+        </div>
+        @for (category of categories; track category) {
+          <div class="notifications__preferences-row" role="row">
+            <span role="rowheader">{{ 'notifications.category.' + category | translate }}</span>
+            @for (channel of channels; track channel) {
+              <span role="cell">
+                @if (isCategoryOptOutable(category)) {
+                  <input
+                    type="checkbox"
+                    [checked]="store.preferences()[category]?.[channel] ?? true"
+                    (change)="store.toggleChannel(category, channel)"
+                  />
+                } @else {
+                  <ums-badge variant="neutral" size="sm">{{
+                    'notifications.preferences.mandatory' | translate
+                  }}</ums-badge>
+                }
+              </span>
+            }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</section>
