@@ -1,0 +1,94 @@
+@if (store.loading() && !store.snapshot()) {
+  <div class="dashboard__skeleton">
+    <ums-skeleton variant="rect" height="8rem" />
+    <ums-skeleton variant="rect" height="6rem" />
+    <ums-skeleton variant="rect" height="6rem" />
+  </div>
+} @else if (store.error()) {
+  <ums-error-state
+    [title]="'dashboard.error' | translate"
+    [retryLabel]="'common.retry' | translate"
+    (retry)="retry()"
+  />
+} @else if (store.snapshot(); as snapshot) {
+  <section class="dashboard">
+    <header class="dashboard__hero">
+      <ums-card
+        variant="profile"
+        [profileName]="snapshot.student.givenName + ' ' + snapshot.student.familyName"
+        [profileRole]="snapshot.program?.name ?? ''"
+        [profileImageUrl]="snapshot.student.photoUrl ?? undefined"
+      >
+        <p class="dashboard__greeting">
+          {{ greetingKey() | translate: { name: snapshot.student.givenName } }}
+        </p>
+      </ums-card>
+
+      @if (!connectivity.isOnline()) {
+        <p class="dashboard__stale-note">
+          {{ 'dashboard.offline.lastUpdated' | translate: { time: lastUpdatedLabel() } }}
+        </p>
+      }
+    </header>
+
+    @if (snapshot.attentionItems.length > 0) {
+      <section class="dashboard__attention" aria-label="What needs your attention">
+        <h2>{{ 'dashboard.attention.title' | translate }}</h2>
+        <ul>
+          @for (item of snapshot.attentionItems; track item.id) {
+            <li>
+              <span>{{ translateMessage(item.messageKey, item.params) }}</span>
+              @if (item.actionPath) {
+                <ums-button variant="tertiary" size="sm" (click)="goTo(item.actionPath)">
+                  {{ 'common.view' | translate }}
+                </ums-button>
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    } @else {
+      <ums-empty-state [title]="'dashboard.attention.empty' | translate" />
+    }
+
+    <div class="dashboard__grid">
+      <ums-card
+        variant="stat"
+        [statLabel]="'dashboard.card.invoice.title' | translate"
+        [statValue]="
+          snapshot.outstandingBalance > 0
+            ? (snapshot.currencyCode ?? '') + ' ' + snapshot.outstandingBalance.toFixed(2)
+            : ('dashboard.card.invoice.clear' | translate)
+        "
+      />
+
+      <ums-card
+        variant="stat"
+        [statLabel]="'dashboard.card.hostel.title' | translate"
+        [statValue]="
+          snapshot.allocation
+            ? snapshot.allocation.status
+            : ('dashboard.card.hostel.none' | translate)
+        "
+      />
+
+      <ums-card
+        variant="stat"
+        [statLabel]="'dashboard.gpa.current' | translate"
+        [statValue]="
+          snapshot.overallAverageScore !== null
+            ? snapshot.overallAverageScore.toFixed(2)
+            : ('dashboard.gpa.empty' | translate)
+        "
+      >
+        @if (sparklineData().length > 1) {
+          <ums-sparkline [data]="sparklineData()" [area]="true" height="3rem" />
+          <p class="dashboard__unofficial-note">{{ 'dashboard.gpa.unofficialNote' | translate }}</p>
+        }
+        <ums-button variant="tertiary" size="sm" (click)="expandGrades()">
+          {{ 'dashboard.gpa.expand' | translate }}
+        </ums-button>
+      </ums-card>
+    </div>
+  </section>
+}

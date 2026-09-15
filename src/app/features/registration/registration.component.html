@@ -1,0 +1,199 @@
+<ums-offline-banner [message]="'shell.offline.message' | translate" />
+
+@if (!store.session()) {
+  <section class="registration__session-picker">
+    <h1>{{ 'registration.title' | translate }}</h1>
+    <ums-form-field #sessionField="umsFormField" [label]="'Academic session id'" [required]="true">
+      <ums-input
+        [id]="sessionField.controlId()"
+        [value]="sessionIdInput()"
+        (valueChange)="sessionIdInput.set($event)"
+      />
+    </ums-form-field>
+    <ums-button variant="primary" (click)="loadSession()">{{
+      'common.save' | translate
+    }}</ums-button>
+
+    @if (store.error()) {
+      <ums-error-state
+        [title]="'registration.error' | translate"
+        [retryLabel]="'common.retry' | translate"
+        (retry)="retry()"
+      />
+    }
+  </section>
+} @else {
+  <div class="registration">
+    <section class="registration__main">
+      <header>
+        <h1>{{ 'registration.title' | translate }}</h1>
+        <p>{{ 'registration.subtitle' | translate: { semester: store.semester()?.name ?? '' } }}</p>
+      </header>
+
+      @if (store.windowStatus() === 'closed') {
+        <ums-badge variant="danger" size="md">
+          {{ 'registration.windowClosed.title' | translate }}
+        </ums-badge>
+        <p>{{ 'registration.windowClosed.body' | translate }}</p>
+      }
+
+      <div class="registration__filters">
+        <ums-input
+          [value]="store.searchText()"
+          [placeholder]="'registration.filters.search' | translate"
+          (valueChange)="store.setSearchText($event)"
+        />
+        <ums-select
+          [options]="departmentOptions()"
+          [value]="store.departmentFilter() ?? ''"
+          (valueChange)="store.setDepartmentFilter($event || null)"
+        />
+      </div>
+
+      @if (store.loading() && store.offerings().length === 0) {
+        <ums-skeleton variant="rect" height="6rem" [lines]="3" />
+      } @else if (store.error()) {
+        <ums-error-state
+          [title]="'registration.error' | translate"
+          [retryLabel]="'common.retry' | translate"
+          (retry)="retry()"
+        />
+      } @else if (store.filteredOfferings().length === 0) {
+        <ums-empty-state [title]="'registration.error' | translate" />
+      } @else {
+        <ul class="registration__offering-list">
+          @for (vm of store.filteredOfferings(); track vm.offering.id) {
+            <li class="registration__offering-card">
+              <header class="registration__offering-header">
+                <h3>{{ vm.course?.code }} — {{ vm.course?.title }}</h3>
+                <span>{{ vm.course?.creditHours }} credits</span>
+              </header>
+
+              <div class="registration__seat-gauge">
+                <ums-progress-bar
+                  [value]="vm.offering.enrolledCount"
+                  [max]="vm.offering.capacity"
+                  [tone]="seatToneFor(vm.offering)"
+                />
+                <span>
+                  {{
+                    seatsRemainingFor(vm.offering) > 0
+                      ? ('registration.seats.remaining'
+                        | translate: { count: seatsRemainingFor(vm.offering) })
+                      : ('registration.seats.full' | translate)
+                  }}
+                </span>
+              </div>
+
+              @for (section of vm.offering.sections; track section.id) {
+                <div class="registration__section-row">
+                  <span
+                    >{{ dayLabel(section.dayOfWeek) }} {{ section.start }}–{{ section.end }}</span
+                  >
+
+                  @if (eligibilityFor(vm, section); as eligibility) {
+                    @if (!eligibility.prerequisitesSatisfied) {
+                      <ums-badge variant="warning" size="sm">
+                        {{ 'registration.prerequisite.unsatisfied' | translate }}
+                      </ums-badge>
+                    } @else {
+                      <ums-badge variant="success" size="sm">
+                        {{ 'registration.prerequisite.satisfied' | translate }}
+                      </ums-badge>
+                    }
+                    @if (!eligibility.creditLimitOk) {
+                      <ums-badge variant="danger" size="sm">
+                        {{ 'registration.creditLimit.exceeded' | translate }}
+                      </ums-badge>
+                    }
+                    @if (eligibility.timetableConflict) {
+                      <ums-badge variant="danger" size="sm">
+                        {{ 'registration.conflict.timetable' | translate }}
+                      </ums-badge>
+                    }
+                  }
+
+                  @if (vm.offering.hasAvailableSeats) {
+                    <ums-button variant="secondary" size="sm" (click)="addSection(vm, section)">
+                      {{ 'common.save' | translate }}
+                    </ums-button>
+                  } @else if (waitlistStatusFor(vm.offering.id) === null) {
+                    <ums-button variant="tertiary" size="sm" (click)="joinWaitlist(vm.offering.id)">
+                      {{ 'registration.waitlist.join' | translate }}
+                    </ums-button>
+                  } @else if (waitlistStatusFor(vm.offering.id); as waitlist) {
+                    @if (waitlist.offer) {
+                      @if (countdownFor(vm.offering.id); as countdown) {
+                        <span class="registration__waitlist-offer">
+                          {{
+                            'registration.waitlist.offer.body'
+                              | translate: { seconds: countdown.remainingSeconds }
+                          }}
+                        </span>
+                        <ums-button
+                          variant="primary"
+                          size="sm"
+                          [disabled]="countdown.withinSafetyMargin"
+                          (click)="confirmWaitlistOffer(vm.offering.id)"
+                        >
+                          {{ 'registration.waitlist.offer.confirm' | translate }}
+                        </ums-button>
+                      }
+                    } @else {
+                      <ums-badge variant="info" size="sm">
+                        {{
+                          'registration.waitlist.position'
+                            | translate: { position: waitlist.position ?? '-' }
+                        }}
+                      </ums-badge>
+                    }
+                  }
+                </div>
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      @if (store.trackedEnrollments().length > 0) {
+        <section class="registration__tracked">
+          <h2>{{ 'shell.nav.registration' | translate }}</h2>
+          <ul>
+            @for (enrollment of store.trackedEnrollments(); track enrollment.enrollmentId) {
+              <li>
+                <span>{{ enrollment.courseCode }} — {{ enrollment.courseTitle }}</span>
+                <ums-badge
+                  [variant]="enrollment.status === 'Dropped' ? 'neutral' : 'success'"
+                  size="sm"
+                >
+                  {{ 'registration.status.' + enrollment.status | translate }}
+                </ums-badge>
+                @if (enrollment.status === 'Active' || enrollment.status === 'Pending') {
+                  <ums-button variant="ghost" size="sm" (click)="requestDrop(enrollment)">
+                    {{ 'registration.drop' | translate }}
+                  </ums-button>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </section>
+
+    <app-schedule-panel
+      [selections]="store.selections()"
+      (registerRequested)="registerSelection($event)"
+      (removeRequested)="removeSelection($event)"
+    />
+  </div>
+}
+
+<ums-confirmation-dialog
+  [open]="dropConfirmTarget() !== null"
+  [title]="'registration.dropConfirm.title' | translate"
+  [description]="'registration.dropConfirm.body' | translate"
+  [confirmLabel]="'registration.dropConfirm.confirm' | translate"
+  [cancelLabel]="'common.cancel' | translate"
+  (confirmed)="confirmDrop($event)"
+  (cancelled)="cancelDrop()"
+/>

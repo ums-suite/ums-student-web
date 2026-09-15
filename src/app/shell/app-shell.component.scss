@@ -1,0 +1,22 @@
+.app-shell__brand {
+  font-weight: 700;
+  font-size: var(--type-heading-sm-font-size);
+  color: var(--sweb-faculty-accent, currentColor);
+}
+
+.app-shell__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-shell__notification-badge {
+  position: relative;
+  display: inline-flex;
+
+  ums-badge {
+    position: absolute;
+    inset-block-start: -0.25rem;
+    inset-inline-end: -0.25rem;
+  }
+}

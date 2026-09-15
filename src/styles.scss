@@ -1,0 +1,27 @@
+// Global styles -- requirement-spec.md §2 (Design system row): every visual value flows through
+// @ums/design-system's tokens; this app never hand-rolls its own color/type/spacing values,
+// except the small, app-owned faculty-accent custom property pair (core/theme/faculty-accent.service.ts).
+
+// Hand-authored partials: Google Fonts loading, a minimal reset, and token-backed utility
+// classes (.ums-tnum, .ums-visually-hidden). @use rules must precede all other rules in Sass.
+@use '@ums/design-system/styles/index' as ums;
+
+// tokens.css: token-driven CSS custom properties (light/dark, both @media(prefers-color-scheme)
+// and [data-theme] override) -- loaded as a plain stylesheet, never @use'd into the Sass module
+// graph (matches @ums/design-system's own README consumption instructions).
+// KNOWN PACKAGING GAP (matches `ums-admission-web`'s identical, already-flagged workaround): the
+// published dist package.json's "exports" map only declares "." and "./package.json", so the
+// bare specifier the README documents (`@import '@ums/design-system/styles/tokens.css'`) fails to
+// resolve under esbuild's Node "exports" enforcement. A relative node_modules path sidesteps
+// package-export resolution entirely (relative imports are never subject to the "exports" map)
+// as a stopgap; swap back to the bare specifier once @ums/design-system adds a "./styles/*" entry.
+@import '../node_modules/@ums/design-system/styles/tokens.css';
+
+html {
+  block-size: 100%;
+}
+
+body {
+  block-size: 100%;
+  margin: 0;
+}
