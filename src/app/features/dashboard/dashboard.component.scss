@@ -1,0 +1,62 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.dashboard__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.dashboard__hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dashboard__greeting {
+  margin: 0;
+  font-size: var(--type-heading-sm-font-size);
+  color: var(--sweb-faculty-accent, inherit);
+}
+
+.dashboard__stale-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--type-body-sm-font-size);
+}
+
+.dashboard__attention {
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background-color: var(--color-surface-alt);
+    border-radius: var(--radius-sm);
+  }
+}
+
+.dashboard__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+}
+
+.dashboard__unofficial-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--type-body-sm-font-size);
+}
